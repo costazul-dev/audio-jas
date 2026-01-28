@@ -1,19 +1,38 @@
 # Audio JAS
 
-Email server that you can email audio and it responds with a transcript.
+Email-based audio transcription service. Send an audio file, receive a transcript.
 
 ## Features
 
-- You email an audio file and get a transcript as a reply email
+- Email an audio file → receive transcript as reply
+- Supports .mp3, .wav, .m4a, .ogg
+- Whitelist-based access control
+
+## Tech Stack
+
+- Python
+- OpenAI Whisper API
+- IMAP (PurelyMail)
+- ffmpeg (audio conversion)
 
 ## Setup Instructions
 
-[Work in progress]
+1. Clone the repository
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate
+   ```
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+4. Copy `.env.example` to `.env` and fill in your configuration:
+   ```
+   cp .env.example .env
+   ```
+5. Ensure ffmpeg is installed on your system
 
 ## Usage
 
 [Work in progress]
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
