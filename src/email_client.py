@@ -3,6 +3,7 @@ import email
 import logging
 import os
 from email.message import Message
+from email.utils import parseaddr
 from pathlib import Path
 
 from imapclient import IMAPClient
@@ -10,6 +11,7 @@ from imapclient import IMAPClient
 SUPPORTED_AUDIO_FORMATS = {".mp3", ".wav", ".m4a", ".ogg"}
 DEFAULT_POLL_INTERVAL = 5
 PROCESSED_FOLDER = "Processed"
+REJECTED_FOLDER = "Rejected"
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,19 @@ def _get_poll_interval() -> int:
         return int(os.environ.get("POLL_INTERVAL", DEFAULT_POLL_INTERVAL))
     except ValueError:
         return DEFAULT_POLL_INTERVAL
+
+
+def _parse_whitelist(raw: str) -> set[str]:
+    return {addr.strip().lower() for addr in raw.split(",") if addr.strip()}
+
+
+def _extract_sender_address(raw_bytes: bytes) -> str | None:
+    try:
+        msg = email.message_from_bytes(raw_bytes)
+    except Exception:
+        return None
+    _, addr = parseaddr(msg.get("From", ""))
+    return addr.lower() if addr else None
 
 
 def _extract_audio_attachment(part: Message, download_dir: Path) -> Path | None:
@@ -110,6 +125,7 @@ class EmailClient:
         self._username = username or os.environ.get("IMAP_USERNAME", "")
         self._password = password or os.environ.get("IMAP_PASSWORD", "")
         self._client: IMAPClient | None = None
+        self._whitelist = _parse_whitelist(os.environ.get("SENDER_WHITELIST", ""))
 
     def connect(self) -> None:
         try:
@@ -123,8 +139,10 @@ class EmailClient:
             self._client = None
             raise AuthenticationError(f"Login failed for {self._username}: {e}")
 
+        self._delimiter = self._client.namespace().personal[0][1]
         self._client.select_folder("INBOX")
-        self._ensure_processed_folder()
+        self._ensure_folders()
+        logger.info("Sender whitelist: %d addresses", len(self._whitelist))
 
     def disconnect(self) -> None:
         if self._client:
@@ -142,12 +160,27 @@ class EmailClient:
         self.disconnect()
         return False
 
-    def _ensure_processed_folder(self) -> None:
+    def _is_sender_allowed(self, sender: str | None) -> bool:
+        return sender is not None and sender in self._whitelist
+
+    def _reject(self, uid: int) -> None:
         if not self._client:
             return
-        if not self._client.folder_exists(PROCESSED_FOLDER):
-            self._client.create_folder(PROCESSED_FOLDER)
-            logger.info("Created folder: %s", PROCESSED_FOLDER)
+        try:
+            self._client.move([uid], REJECTED_FOLDER)
+        except Exception as e:
+            logger.warning("Failed to move UID %d to %s: %s", uid, REJECTED_FOLDER, e)
+
+    def _ensure_folder(self, folder: str) -> None:
+        if not self._client:
+            return
+        if not self._client.folder_exists(folder):
+            self._client.create_folder(folder)
+            logger.info("Created folder: %s", folder)
+
+    def _ensure_folders(self) -> None:
+        for folder in (PROCESSED_FOLDER, REJECTED_FOLDER):
+            self._ensure_folder(folder)
 
     def fetch_unseen_emails(self, download_dir: Path) -> list[EmailMessage]:
         if not self._client:
@@ -173,17 +206,29 @@ class EmailClient:
                 logger.warning("No RFC822 data for UID %d, skipping", uid)
                 continue
 
+            sender = _extract_sender_address(raw_bytes)
+            if not self._is_sender_allowed(sender):
+                logger.info("UID %d from %s not in whitelist, rejecting", uid, sender)
+                self._reject(uid)
+                continue
+
             parsed = _parse_email(uid, raw_bytes, download_dir)
             if parsed:
                 results.append(parsed)
 
         return results
 
-    def mark_as_processed(self, uid: int) -> None:
+    def mark_as_processed(self, msg: EmailMessage) -> None:
         if not self._client:
             raise IMAPConnectionError("Not connected. Call connect() first.")
 
+        _, addr = parseaddr(msg.sender)
+        sep = self._delimiter
+        safe_addr = addr.lower().replace(sep, "_") if addr else None
+        folder = f"{PROCESSED_FOLDER}{sep}{safe_addr}" if safe_addr else PROCESSED_FOLDER
+        self._ensure_folder(folder)
+
         try:
-            self._client.move([uid], PROCESSED_FOLDER)
+            self._client.move([msg.uid], folder)
         except Exception as e:
-            raise FetchError(f"Failed to move UID {uid} to {PROCESSED_FOLDER}: {e}")
+            raise FetchError(f"Failed to move UID {msg.uid} to {folder}: {e}")
