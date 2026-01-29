@@ -40,6 +40,26 @@ Email-based audio transcription service. Send an audio file, receive a transcrip
    brew install ffmpeg
    ```
 
+## Configuration
+
+| Variable | Description | Default |
+|---|---|---|
+| `OPENAI_API_KEY` | OpenAI API key for Whisper | (required) |
+| `IMAP_HOST` | IMAP server hostname | (required) |
+| `IMAP_PORT` | IMAP server port | `993` |
+| `IMAP_USERNAME` | IMAP login username | (required) |
+| `IMAP_PASSWORD` | IMAP login password | (required) |
+| `POLL_INTERVAL` | Seconds between inbox checks | `5` |
+| `FFMPEG_PATH` | Path to ffmpeg binary | system default |
+| `OUTPUT_DIR` | Directory for transcription output | (required) |
+
+## Architecture
+
+- `src/transcription.py` - audio-to-text via OpenAI Whisper API with ffmpeg normalization
+- `src/email_client.py` - IMAP connection, inbox polling, audio attachment extraction
+
+Processed emails are moved from INBOX to a `Processed` folder.
+
 ## Usage
 
 [Work in progress]
