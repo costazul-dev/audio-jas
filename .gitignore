@@ -1,7 +1,9 @@
 # Environment
 venv/
+.venv/
 env/
 .env
+test_audio.mp3
 
 # Cache
 __pycache__/

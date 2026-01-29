@@ -31,7 +31,14 @@ Email-based audio transcription service. Send an audio file, receive a transcrip
    ```
    cp .env.example .env
    ```
-5. Ensure ffmpeg is installed on your system
+5. Install ffmpeg (system dependency, required for audio conversion):
+   ```
+   # Ubuntu/Debian
+   sudo apt install ffmpeg
+
+   # macOS
+   brew install ffmpeg
+   ```
 
 ## Usage
 
