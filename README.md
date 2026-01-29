@@ -49,6 +49,7 @@ Email-based audio transcription service. Send an audio file, receive a transcrip
 | `IMAP_PORT` | IMAP server port | `993` |
 | `IMAP_USERNAME` | IMAP login username | (required) |
 | `IMAP_PASSWORD` | IMAP login password | (required) |
+| `SENDER_WHITELIST` | Comma-separated allowed sender emails | (empty = reject all) |
 | `POLL_INTERVAL` | Seconds between inbox checks | `5` |
 | `FFMPEG_PATH` | Path to ffmpeg binary | system default |
 | `OUTPUT_DIR` | Directory for transcription output | (required) |
@@ -58,7 +59,7 @@ Email-based audio transcription service. Send an audio file, receive a transcrip
 - `src/transcription.py` - audio-to-text via OpenAI Whisper API with ffmpeg normalization
 - `src/email_client.py` - IMAP connection, inbox polling, audio attachment extraction
 
-Processed emails are moved from INBOX to a `Processed` folder.
+Emails from whitelisted senders are processed and moved to `Processed/<sender>`. Non-whitelisted emails are moved to `Rejected`. Unset or empty `SENDER_WHITELIST` rejects all emails.
 
 ## Usage
 

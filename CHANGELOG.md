@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-01-29
+
+### Added
+
+- Sender whitelist via `SENDER_WHITELIST` env var (comma-separated, case-insensitive)
+- Non-whitelisted emails moved to `Rejected` IMAP folder
+- Per-sender subfolders under `Processed` (e.g., `Processed/user@example_com`)
+- IMAP namespace delimiter detection for folder naming
+
+### Changed
+
+- `mark_as_processed()` now accepts `EmailMessage` instead of `uid: int`
+- `_ensure_processed_folder()` replaced by `_ensure_folders()` and `_ensure_folder()`
+- Whitelist check runs before `_parse_email`, preventing disk writes for rejected senders
+- Empty/unset `SENDER_WHITELIST` rejects all emails (strict default)
+
 ## [0.2.0] - 2026-01-29
 
 ### Added
