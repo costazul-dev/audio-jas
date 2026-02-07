@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-07
+
+### Added
+
+- `src/email_sender.py` - SMTP email reply with transcript attachment
+- `EmailSender` class with context manager support for SMTP connections
+- `send_transcript()` sends reply to original sender with `.txt` attachments
+- `In-Reply-To` and `References` headers for email threading
+- SMTP_SSL (port 465) and STARTTLS support
+- Custom error hierarchy: `EmailSenderError`, `SMTPConnectionError`, `SMTPAuthenticationError`, `SendError`
+- `message_id` field on `EmailMessage` dataclass for reply threading
+- `Message-ID` header extraction in `_parse_email()`
+- SMTP configuration in `.env.example` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`)
+
 ## [0.3.0] - 2026-01-29
 
 ### Added

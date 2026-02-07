@@ -49,6 +49,10 @@ Email-based audio transcription service. Send an audio file, receive a transcrip
 | `IMAP_PORT` | IMAP server port | `993` |
 | `IMAP_USERNAME` | IMAP login username | (required) |
 | `IMAP_PASSWORD` | IMAP login password | (required) |
+| `SMTP_HOST` | SMTP server hostname | (required) |
+| `SMTP_PORT` | SMTP server port | `465` |
+| `SMTP_USERNAME` | SMTP login username | (required) |
+| `SMTP_PASSWORD` | SMTP login password | (required) |
 | `SENDER_WHITELIST` | Comma-separated allowed sender emails | (empty = reject all) |
 | `POLL_INTERVAL` | Seconds between inbox checks | `5` |
 | `FFMPEG_PATH` | Path to ffmpeg binary | system default |
@@ -58,8 +62,9 @@ Email-based audio transcription service. Send an audio file, receive a transcrip
 
 - `src/transcription.py` - audio-to-text via OpenAI Whisper API with ffmpeg normalization
 - `src/email_client.py` - IMAP connection, inbox polling, audio attachment extraction
+- `src/email_sender.py` - SMTP reply with transcript attachments, email threading
 
-Emails from whitelisted senders are processed and moved to `Processed/<sender>`. Non-whitelisted emails are moved to `Rejected`. Unset or empty `SENDER_WHITELIST` rejects all emails.
+Emails from whitelisted senders are processed and moved to `Processed/<sender>`. Non-whitelisted emails are moved to `Rejected`. Unset or empty `SENDER_WHITELIST` rejects all emails. Transcript replies are threaded under the original email via `In-Reply-To`/`References` headers.
 
 ## Usage
 
