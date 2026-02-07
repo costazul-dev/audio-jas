@@ -38,6 +38,7 @@ class EmailMessage:
     sender: str
     subject: str
     attachment_paths: list[Path]
+    message_id: str | None = None
 
 
 def _get_poll_interval() -> int:
@@ -89,6 +90,7 @@ def _parse_email(
 
     sender = msg.get("From", "")
     subject = msg.get("Subject", "")
+    message_id = msg.get("Message-ID")
     attachment_paths: list[Path] = []
 
     for part in msg.walk():
@@ -109,6 +111,7 @@ def _parse_email(
         sender=sender,
         subject=subject,
         attachment_paths=attachment_paths,
+        message_id=message_id,
     )
 
 

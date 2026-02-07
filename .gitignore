@@ -4,6 +4,7 @@ venv/
 env/
 .env
 test_audio.mp3
+test.py
 
 # Cache
 __pycache__/
@@ -20,3 +21,4 @@ __pycache__/
 # Project-specific
 logs/
 *.log
+downloads/
